@@ -21,6 +21,7 @@ data:
   {{- if .Values.node_configs.general.LICENSE_KEY }}
   LICENSE_KEY: "{{ .Values.node_configs.general.LICENSE_KEY }}"
   {{- end }}
+  INIT_TYPE: "prod"
   NODE_TYPE: "{{ .Values.node_configs.general.NODE_TYPE }}"
   NODE_NAME: "{{ include "edgelake-operator.nodeName" . }}"
   COMPANY_NAME: "{{ .Values.node_configs.general.COMPANY_NAME }}"
