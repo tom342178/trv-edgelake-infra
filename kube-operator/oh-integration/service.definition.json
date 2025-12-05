@@ -1,0 +1,56 @@
+{
+  "org": "${HZN_ORG_ID}",
+  "label": "EdgeLake Kubernetes Operator Controller",
+  "description": "Kubernetes operator controller that manages EdgeLake operator nodes via CRD. Deploys to K8s edge clusters and watches for EdgeLakeOperator custom resources.",
+  "documentation": "https://github.com/EdgeLake/EdgeLake",
+  "url": "service-edgelake-kube-operator",
+  "version": "${SERVICE_VERSION}",
+  "arch": "${ARCH}",
+  "public": true,
+  "sharable": "singleton",
+  "requiredServices": [],
+  "userInput": [
+    {
+      "name": "KUBECONFIG_BASE64",
+      "label": "Base64-encoded kubeconfig for target Kubernetes cluster",
+      "type": "string",
+      "defaultValue": ""
+    },
+    {
+      "name": "OPERATOR_NAMESPACE",
+      "label": "Namespace where operator controller will run",
+      "type": "string",
+      "defaultValue": "edgelake-system"
+    },
+    {
+      "name": "WATCH_NAMESPACE",
+      "label": "Namespace to watch for EdgeLakeOperator CRs (empty for all namespaces)",
+      "type": "string",
+      "defaultValue": ""
+    },
+    {
+      "name": "LOG_LEVEL",
+      "label": "Logging level (DEBUG, INFO, WARNING, ERROR)",
+      "type": "string",
+      "defaultValue": "INFO"
+    }
+  ],
+  "deployment": {
+    "services": {
+      "edgelake-kube-operator": {
+        "image": "${DOCKER_IMAGE_BASE}:${SERVICE_VERSION}",
+        "privileged": false,
+        "network": "host",
+        "binds": [],
+        "environment": [
+          "KUBECONFIG=/app/kubeconfig",
+          "PYTHONUNBUFFERED=1"
+        ],
+        "command": [
+          "sh", "-c",
+          "echo $KUBECONFIG_BASE64 | base64 -d > /app/kubeconfig && kopf run --standalone --all-namespaces src/edgelake_operator/operator.py"
+        ]
+      }
+    }
+  }
+}

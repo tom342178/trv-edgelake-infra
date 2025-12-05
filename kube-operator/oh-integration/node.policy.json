@@ -1,0 +1,25 @@
+{
+  "properties": [
+    {
+      "name": "purpose",
+      "value": "kubernetes-edge"
+    },
+    {
+      "name": "has_kubernetes",
+      "value": true
+    },
+    {
+      "name": "kubernetes_version",
+      "value": "1.28"
+    },
+    {
+      "name": "edgelake_enabled",
+      "value": true
+    },
+    {
+      "name": "storage_class",
+      "value": "local-path"
+    }
+  ],
+  "constraints": []
+}

@@ -1,0 +1,50 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edgelake-operator-controller
+  labels:
+    app.kubernetes.io/name: edgelake-operator
+    app.kubernetes.io/component: controller
+rules:
+  # Custom Resource access
+  - apiGroups: ["edgelake.io"]
+    resources: ["edgelakeoperators"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["edgelake.io"]
+    resources: ["edgelakeoperators/status"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["edgelake.io"]
+    resources: ["edgelakeoperators/finalizers"]
+    verbs: ["update"]
+
+  # Core resources for managing EdgeLake deployments
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+
+  # Apps resources
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Events for status reporting
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+
+  # Coordination for leader election (if needed)
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

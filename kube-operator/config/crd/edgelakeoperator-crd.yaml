@@ -1,0 +1,688 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: edgelakeoperators.edgelake.io
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+spec:
+  group: edgelake.io
+  names:
+    kind: EdgeLakeOperator
+    listKind: EdgeLakeOperatorList
+    plural: edgelakeoperators
+    singular: edgelakeoperator
+    shortNames:
+      - elo
+      - elop
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Node Name
+          type: string
+          jsonPath: .spec.general.nodeName
+        - name: Cluster
+          type: string
+          jsonPath: .spec.operator.clusterName
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - general
+                - blockchain
+                - operator
+              properties:
+                # ============================================================
+                # IMAGE CONFIGURATION
+                # ============================================================
+                image:
+                  type: object
+                  description: Docker image configuration
+                  properties:
+                    repository:
+                      type: string
+                      default: "anylogco/edgelake-network"
+                      description: Docker image repository
+                    tag:
+                      type: string
+                      default: "1.3.2500"
+                      description: Image tag (EdgeLake version)
+                    pullPolicy:
+                      type: string
+                      enum: [Always, IfNotPresent, Never]
+                      default: IfNotPresent
+                      description: Image pull policy
+                    pullSecretName:
+                      type: string
+                      description: Name of existing image pull secret
+
+                # ============================================================
+                # RESOURCE LIMITS
+                # ============================================================
+                resources:
+                  type: object
+                  description: CPU and memory resource configuration
+                  properties:
+                    limits:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "2000m"
+                        memory:
+                          type: string
+                          default: "4Gi"
+                    requests:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "500m"
+                        memory:
+                          type: string
+                          default: "1Gi"
+
+                # ============================================================
+                # PERSISTENCE
+                # ============================================================
+                persistence:
+                  type: object
+                  description: Persistent volume configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                      description: Enable persistent storage
+                    storageClassName:
+                      type: string
+                      description: Storage class name (empty for default)
+                    accessMode:
+                      type: string
+                      default: ReadWriteOnce
+                      enum: [ReadWriteOnce, ReadOnlyMany, ReadWriteMany]
+                    retainOnDelete:
+                      type: boolean
+                      default: true
+                      description: Retain PVCs when CR is deleted
+                    anylog:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          default: "5Gi"
+                    blockchain:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          default: "1Gi"
+                    data:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          default: "10Gi"
+                    scripts:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          default: "1Gi"
+
+                # ============================================================
+                # GENERAL NODE SETTINGS
+                # ============================================================
+                general:
+                  type: object
+                  required:
+                    - nodeName
+                    - companyName
+                  description: General node identity and settings
+                  properties:
+                    nodeName:
+                      type: string
+                      description: Unique name for this EdgeLake instance
+                      minLength: 1
+                    companyName:
+                      type: string
+                      description: Company/organization name
+                      minLength: 1
+                    licenseKey:
+                      type: string
+                      description: EdgeLake license key (inline)
+                    licenseKeySecretRef:
+                      type: object
+                      description: Reference to secret containing license key
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                    disableCli:
+                      type: boolean
+                      default: false
+                      description: Disable CLI interface
+                    remoteCli:
+                      type: boolean
+                      default: false
+                      description: Enable remote CLI access
+
+                # ============================================================
+                # GEOLOCATION
+                # ============================================================
+                geolocation:
+                  type: object
+                  description: Geographic location metadata
+                  properties:
+                    location:
+                      type: string
+                      description: GPS coordinates (e.g., "37.7749,-122.4194")
+                    country:
+                      type: string
+                    state:
+                      type: string
+                    city:
+                      type: string
+
+                # ============================================================
+                # NETWORKING
+                # ============================================================
+                networking:
+                  type: object
+                  description: Network and port configuration
+                  properties:
+                    serviceType:
+                      type: string
+                      enum: [ClusterIP, NodePort, LoadBalancer]
+                      default: NodePort
+                      description: Kubernetes service type
+                    overlayIp:
+                      type: string
+                      description: VPN/Tailscale overlay IP address
+                    serverPort:
+                      type: integer
+                      default: 32148
+                      minimum: 1
+                      maximum: 65535
+                      description: TCP server port for node communication
+                    restPort:
+                      type: integer
+                      default: 32149
+                      minimum: 1
+                      maximum: 65535
+                      description: REST API port
+                    brokerPort:
+                      type: integer
+                      minimum: 1
+                      maximum: 65535
+                      description: MQTT broker port (optional)
+                    tcpBind:
+                      type: boolean
+                      default: false
+                      description: Bind TCP to specific IP
+                    restBind:
+                      type: boolean
+                      default: false
+                      description: Bind REST to specific IP
+                    brokerBind:
+                      type: boolean
+                      default: false
+                      description: Bind broker to specific IP
+                    configName:
+                      type: string
+                      description: Network configuration policy name
+                    nicType:
+                      type: string
+                      description: Network interface type
+                    tcpThreads:
+                      type: integer
+                      default: 6
+                      description: TCP thread pool size
+                    restTimeout:
+                      type: integer
+                      default: 30
+                      description: REST timeout in seconds
+                    restThreads:
+                      type: integer
+                      default: 6
+                      description: REST thread pool size
+                    brokerThreads:
+                      type: integer
+                      default: 6
+                      description: Broker thread pool size
+
+                # ============================================================
+                # DATABASE
+                # ============================================================
+                database:
+                  type: object
+                  description: Primary database configuration
+                  properties:
+                    type:
+                      type: string
+                      enum: [sqlite, psql]
+                      default: sqlite
+                      description: Database type
+                    user:
+                      type: string
+                      description: Database username (for psql)
+                    password:
+                      type: string
+                      description: Database password (inline, use secretRef for production)
+                    passwordSecretRef:
+                      type: object
+                      description: Reference to secret containing password
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                    host:
+                      type: string
+                      default: "127.0.0.1"
+                      description: Database host
+                    port:
+                      type: integer
+                      default: 5432
+                      description: Database port
+                    autocommit:
+                      type: boolean
+                      default: false
+                      description: Enable autocommit
+                    systemQuery:
+                      type: boolean
+                      default: false
+                      description: Enable system_query database
+                    memory:
+                      type: boolean
+                      default: false
+                      description: Use in-memory SQLite for system_query
+                    nosql:
+                      type: object
+                      description: NoSQL database configuration (MongoDB)
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: false
+                        type:
+                          type: string
+                          default: mongo
+                        user:
+                          type: string
+                        password:
+                          type: string
+                        passwordSecretRef:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            key:
+                              type: string
+                        host:
+                          type: string
+                          default: "127.0.0.1"
+                        port:
+                          type: integer
+                          default: 27017
+                        blobsDbms:
+                          type: boolean
+                          default: false
+                        blobsReuse:
+                          type: boolean
+                          default: true
+
+                # ============================================================
+                # BLOCKCHAIN
+                # ============================================================
+                blockchain:
+                  type: object
+                  required:
+                    - ledgerConn
+                  description: Blockchain/Master node configuration
+                  properties:
+                    ledgerConn:
+                      type: string
+                      description: Master node connection (ip:port)
+                      pattern: '^[a-zA-Z0-9.-]+:[0-9]+$'
+                    syncTime:
+                      type: string
+                      default: "30 second"
+                      description: Blockchain sync frequency
+                    source:
+                      type: string
+                      enum: [master, optimism, ethereum, hyperledger]
+                      default: master
+                      description: Blockchain source type
+                    destination:
+                      type: string
+                      enum: [file, dbms]
+                      default: file
+                      description: Where to store blockchain ledger
+
+                # ============================================================
+                # OPERATOR SETTINGS
+                # ============================================================
+                operator:
+                  type: object
+                  required:
+                    - clusterName
+                    - defaultDbms
+                  description: Operator node specific settings
+                  properties:
+                    clusterName:
+                      type: string
+                      description: Cluster name for operator
+                      minLength: 1
+                    defaultDbms:
+                      type: string
+                      description: Default logical database name
+                      minLength: 1
+                    member:
+                      type: string
+                      description: Operator member ID in cluster
+                    enableHa:
+                      type: boolean
+                      default: false
+                      description: Enable High Availability mode
+                    startDate:
+                      type: integer
+                      default: 30
+                      description: Days back to sync from master
+                    threads:
+                      type: integer
+                      default: 3
+                      description: Number of operator threads
+                    partitioning:
+                      type: object
+                      description: Data partitioning configuration
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: true
+                        tableName:
+                          type: string
+                          default: "*"
+                          description: Tables to partition (* for all)
+                        column:
+                          type: string
+                          default: insert_timestamp
+                          description: Partition column
+                        interval:
+                          type: string
+                          default: "14 days"
+                          description: Partition interval
+                        keep:
+                          type: integer
+                          default: 3
+                          description: Number of partitions to retain
+                        sync:
+                          type: string
+                          default: "1 day"
+                          description: Partition sync frequency
+
+                # ============================================================
+                # MQTT INGESTION
+                # ============================================================
+                mqtt:
+                  type: object
+                  description: MQTT data ingestion configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    broker:
+                      type: string
+                      description: MQTT broker address
+                    port:
+                      type: integer
+                      default: 1883
+                    user:
+                      type: string
+                    password:
+                      type: string
+                    passwordSecretRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                    log:
+                      type: boolean
+                      default: false
+                      description: Enable MQTT logging
+                    message:
+                      type: object
+                      description: Message processing configuration
+                      properties:
+                        topic:
+                          type: string
+                          description: MQTT topic to subscribe to
+                        dbms:
+                          type: string
+                          description: Target database name
+                        table:
+                          type: string
+                          default: "bring [table]"
+                          description: Target table mapping
+                        timestampColumn:
+                          type: string
+                          default: "bring [timestamp]"
+                        valueColumn:
+                          type: string
+                          default: "bring [value]"
+                        valueColumnType:
+                          type: string
+                          default: float
+
+                # ============================================================
+                # OPC-UA
+                # ============================================================
+                opcua:
+                  type: object
+                  description: OPC-UA client configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    url:
+                      type: string
+                      description: OPC-UA server URL
+                    node:
+                      type: string
+                      description: OPC-UA node path
+                    frequency:
+                      type: string
+                      description: Polling frequency
+
+                # ============================================================
+                # EtherNet/IP
+                # ============================================================
+                etherip:
+                  type: object
+                  description: EtherNet/IP (Allen-Bradley PLC) configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    simulatorMode:
+                      type: boolean
+                      default: false
+                    url:
+                      type: string
+                      description: PLC IP address
+                    frequency:
+                      type: string
+                      description: Polling frequency
+
+                # ============================================================
+                # AGGREGATIONS
+                # ============================================================
+                aggregations:
+                  type: object
+                  description: Data aggregation configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    timeColumn:
+                      type: string
+                      default: insert_timestamp
+                    valueColumn:
+                      type: string
+                      default: value
+
+                # ============================================================
+                # MONITORING
+                # ============================================================
+                monitoring:
+                  type: object
+                  description: Node monitoring configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    storeMonitoring:
+                      type: boolean
+                      default: false
+                    syslogMonitoring:
+                      type: boolean
+                      default: false
+
+                # ============================================================
+                # MCP (AI Integration)
+                # ============================================================
+                mcp:
+                  type: object
+                  description: Model Context Protocol configuration
+                  properties:
+                    autostart:
+                      type: boolean
+                      default: false
+
+                # ============================================================
+                # ADVANCED SETTINGS
+                # ============================================================
+                advanced:
+                  type: object
+                  description: Advanced configuration options
+                  properties:
+                    deployLocalScript:
+                      type: boolean
+                      default: false
+                    debugMode:
+                      type: boolean
+                      default: false
+                    compressFile:
+                      type: boolean
+                      default: true
+                    queryPool:
+                      type: integer
+                      default: 6
+                    writeImmediate:
+                      type: boolean
+                      default: false
+                    thresholdTime:
+                      type: string
+                      default: "60 seconds"
+                    thresholdVolume:
+                      type: string
+                      default: "100KB"
+
+                # ============================================================
+                # NEBULA VPN (Optional)
+                # ============================================================
+                nebula:
+                  type: object
+                  description: Nebula VPN configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    newKeys:
+                      type: boolean
+                      default: false
+                    isLighthouse:
+                      type: boolean
+                      default: false
+                    cidrOverlayAddress:
+                      type: string
+                    lighthouseIp:
+                      type: string
+                    lighthouseNodeIp:
+                      type: string
+
+            # ================================================================
+            # STATUS SUBRESOURCE
+            # ================================================================
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: [Pending, Creating, Running, Updating, Failed, Deleting]
+                  description: Current phase of the EdgeLake operator
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum: ["True", "False", "Unknown"]
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                observedGeneration:
+                  type: integer
+                  description: Last observed generation
+                deploymentName:
+                  type: string
+                  description: Name of created Deployment
+                serviceName:
+                  type: string
+                  description: Name of created Service
+                configMapName:
+                  type: string
+                  description: Name of created ConfigMap
+                secretName:
+                  type: string
+                  description: Name of created Secret (if any)
+                pvcNames:
+                  type: array
+                  items:
+                    type: string
+                  description: Names of created PVCs
+                endpoints:
+                  type: object
+                  properties:
+                    tcp:
+                      type: string
+                      description: TCP endpoint
+                    rest:
+                      type: string
+                      description: REST API endpoint
+                    broker:
+                      type: string
+                      description: MQTT broker endpoint

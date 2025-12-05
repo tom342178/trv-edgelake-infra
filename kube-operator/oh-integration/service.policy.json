@@ -1,0 +1,17 @@
+{
+  "properties": [
+    {
+      "name": "service_type",
+      "value": "kubernetes-operator"
+    },
+    {
+      "name": "service_name",
+      "value": "edgelake-kube-operator"
+    },
+    {
+      "name": "manages",
+      "value": "edgelake-operator-nodes"
+    }
+  ],
+  "constraints": []
+}

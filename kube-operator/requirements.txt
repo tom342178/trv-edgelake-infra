@@ -1,0 +1,11 @@
+# Core dependencies
+kopf>=1.36.0
+kubernetes>=28.1.0
+pydantic>=2.0.0
+structlog>=23.0.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+ruff>=0.1.0
+mypy>=1.0.0

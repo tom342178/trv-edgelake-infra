@@ -1,0 +1,33 @@
+apiVersion: edgelake.io/v1alpha1
+kind: EdgeLakeOperator
+metadata:
+  name: edgelake-operator-basic
+  namespace: default
+spec:
+  # Required: Node identity
+  general:
+    nodeName: edgelake-operator-basic
+    companyName: "My Company"
+
+  # Required: Master node connection
+  blockchain:
+    ledgerConn: "100.127.19.27:32048"
+
+  # Required: Operator cluster settings
+  operator:
+    clusterName: my-company-cluster
+    defaultDbms: my_company
+
+  # Optional: Use SQLite (default, no external DB needed)
+  database:
+    type: sqlite
+
+  # Optional: Disable persistence for quick testing
+  persistence:
+    enabled: false
+
+  # Optional: NodePort service for external access
+  networking:
+    serviceType: NodePort
+    serverPort: 32148
+    restPort: 32149

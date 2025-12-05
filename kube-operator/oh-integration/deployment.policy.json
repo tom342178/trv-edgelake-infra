@@ -1,0 +1,40 @@
+{
+  "label": "EdgeLake K8s Operator Deployment Policy",
+  "description": "Deploy EdgeLake Kubernetes operator controller to edge nodes with Kubernetes clusters",
+  "service": {
+    "name": "service-edgelake-kube-operator",
+    "org": "${HZN_ORG_ID}",
+    "arch": "*",
+    "serviceVersions": [
+      {
+        "version": "${SERVICE_VERSION}",
+        "priority": {
+          "priority_value": 1,
+          "retries": 3,
+          "retry_durations": 1800
+        }
+      }
+    ]
+  },
+  "constraints": [
+    "purpose == kubernetes-edge",
+    "has_kubernetes == true"
+  ],
+  "userInput": [
+    {
+      "serviceOrgid": "${HZN_ORG_ID}",
+      "serviceUrl": "service-edgelake-kube-operator",
+      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "inputs": [
+        {
+          "name": "OPERATOR_NAMESPACE",
+          "value": "edgelake-system"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "INFO"
+        }
+      ]
+    }
+  ]
+}

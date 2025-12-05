@@ -1,0 +1,63 @@
+apiVersion: edgelake.io/v1alpha1
+kind: EdgeLakeOperator
+metadata:
+  name: edgelake-operator-mqtt
+  namespace: iot
+spec:
+  # Node identity
+  general:
+    nodeName: edgelake-operator-mqtt
+    companyName: "IoT Company"
+
+  # Storage for IoT data
+  persistence:
+    enabled: true
+    data:
+      size: "50Gi"
+
+  # Network with broker port
+  networking:
+    serviceType: NodePort
+    serverPort: 32148
+    restPort: 32149
+    brokerPort: 32150
+
+  # SQLite for edge deployment
+  database:
+    type: sqlite
+
+  # Master node connection
+  blockchain:
+    ledgerConn: "100.127.19.27:32048"
+
+  # Operator settings
+  operator:
+    clusterName: iot-cluster
+    defaultDbms: iot_data
+    partitioning:
+      enabled: true
+      interval: "1 day"
+      keep: 7
+
+  # MQTT data ingestion configuration
+  mqtt:
+    enabled: true
+    broker: "mqtt-broker.iot.svc.cluster.local"
+    port: 1883
+    user: "edgelake"
+    passwordSecretRef:
+      name: mqtt-credentials
+      key: password
+    log: false
+    message:
+      topic: "sensors/+/data"
+      dbms: "iot_data"
+      table: "bring [table]"
+      timestampColumn: "bring [timestamp]"
+      valueColumn: "bring [value]"
+      valueColumnType: "float"
+
+  # Enable monitoring
+  monitoring:
+    enabled: true
+    storeMonitoring: true
