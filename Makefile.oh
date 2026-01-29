@@ -41,12 +41,16 @@ export SERVICE_NAME ?= service-edgelake-$(EDGELAKE_TYPE)
 # Service version
 export SERVICE_VERSION ?= 1.3.5
 
-# Architecture
+# Architecture (amd64 or arm64)
 export ARCH ?= $(shell hzn architecture 2>/dev/null || echo "amd64")
 
 # Docker image configuration
-export DOCKER_IMAGE_BASE ?= 100.127.19.27:5000/edgelake-mcp
-export DOCKER_IMAGE_VERSION ?= amd64-latest
+# Use official Docker Hub image (supports both amd64 and arm64)
+export DOCKER_IMAGE_BASE ?= anylogco/edgelake
+export DOCKER_IMAGE_VERSION ?= latest
+
+# Configuration profile (operator_production, operator_jetson, etc.)
+export CONFIG_PROFILE ?= operator_production
 
 # ====================
 # REMOTE SERVER CONFIGURATION
@@ -68,8 +72,8 @@ LOCAL_DIR ?= /Users/tviviano/Documents/GitHub/trv-edgelake-infra
 # Service definitions directory
 OH_SERVICES_DIR := oh-services/$(EDGELAKE_TYPE)
 
-# Configuration file
-CONFIG_FILE := $(OH_SERVICES_DIR)/configurations/operator_production.env
+# Configuration file (uses CONFIG_PROFILE variable)
+CONFIG_FILE := $(OH_SERVICES_DIR)/configurations/$(CONFIG_PROFILE).env
 
 # Service definition files
 SERVICE_DEF_TEMPLATE := $(OH_SERVICES_DIR)/service.definition.json.template
@@ -108,6 +112,7 @@ help: ## Show this help message
 	@echo "  SERVICE_VERSION:         $(SERVICE_VERSION)"
 	@echo "  DOCKER_IMAGE:            $(DOCKER_IMAGE_BASE):$(DOCKER_IMAGE_VERSION)"
 	@echo "  ARCH:                    $(ARCH)"
+	@echo "  CONFIG_PROFILE:          $(CONFIG_PROFILE)"
 	@echo ""
 	@echo "Main Commands:"
 	@echo "  make oh-publish-all              - Publish service, policies, and deployment policy"
@@ -139,11 +144,14 @@ help: ## Show this help message
 	@echo "  make oh-test-connection          - Test connection to Exchange"
 	@echo ""
 	@echo "Examples:"
-	@echo "  # Publish operator service"
-	@echo "  make oh-publish-all EDGELAKE_TYPE=operator"
+	@echo "  # Publish operator service (amd64)"
+	@echo "  make -f Makefile.oh oh-publish-all EDGELAKE_TYPE=operator"
+	@echo ""
+	@echo "  # Publish ARM64 service for Jetson"
+	@echo "  make -f Makefile.oh oh-publish-all ARCH=arm64 CONFIG_PROFILE=operator_jetson SERVICE_VERSION=1.4.0"
 	@echo ""
 	@echo "  # Use custom version and image"
-	@echo "  make oh-publish-all SERVICE_VERSION=1.4.0 DOCKER_IMAGE_VERSION=latest"
+	@echo "  make -f Makefile.oh oh-publish-all SERVICE_VERSION=1.4.0 DOCKER_IMAGE_VERSION=latest"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -179,7 +187,7 @@ oh-prep-deployment: ## Generate deployment policy from configuration
 		echo "❌ Policy script not found: $(POLICY_SCRIPT)"; \
 		exit 1; \
 	fi
-	@cd $(OH_SERVICES_DIR) && $(PYTHON_CMD) create_deployment_policy.py $(SERVICE_VERSION) configurations/operator_production.env
+	@cd $(OH_SERVICES_DIR) && $(PYTHON_CMD) create_deployment_policy.py $(SERVICE_VERSION) configurations/$(CONFIG_PROFILE).env
 	@echo "✓ Deployment policy generated: $(DEPLOYMENT_POLICY)"
 
 # ====================

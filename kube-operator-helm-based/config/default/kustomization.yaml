@@ -1,0 +1,21 @@
+# Kustomization for deploying the EdgeLake Operator
+# Usage: kubectl apply -k config/default/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: edgelake-operator-system
+
+resources:
+  - ../crd/edgelake.trv.io_edgelakeoperators.yaml
+  - ../rbac/service_account.yaml
+  - ../rbac/role.yaml
+  - ../rbac/role_binding.yaml
+  - ../rbac/leader_election_role.yaml
+  - ../rbac/leader_election_role_binding.yaml
+  - ../manager/manager.yaml
+
+# Uncomment to set a custom image
+# images:
+#   - name: edgelake-operator
+#     newName: your-registry/edgelake-operator
+#     newTag: v1.0.0

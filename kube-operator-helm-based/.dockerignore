@@ -1,0 +1,14 @@
+# Ignore git
+.git
+.gitignore
+
+# Ignore documentation
+*.md
+LICENSE
+
+# Ignore configuration files not needed in image
+config/
+Makefile
+
+# Ignore local development files
+bin/

@@ -1,0 +1,12 @@
+# watches.yaml
+# This file configures the Helm operator to watch for EdgeLakeOperator CRs
+# and reconcile them using the edgelake-operator Helm chart
+
+- group: edgelake.trv.io
+  version: v1alpha1
+  kind: EdgeLakeOperator
+  chart: helm-charts/edgelake-operator
+  # Override release name with the CR name
+  # overrideValues: {}
+  # Reconciliation period (optional, defaults to 0 for no periodic reconciliation)
+  # reconcilePeriod: 0s
